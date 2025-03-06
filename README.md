@@ -19,15 +19,15 @@ This tool is particularly useful for system administrators and support engineers
 - Root privileges for execution
 
 ## Usage
-`$ sudo python3 AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]`
+`# ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]`
 
-![image](https://github.com/user-attachments/assets/6cddec33-4a08-4bb1-adc9-13814d41d32c)
-
+![image](https://github.com/user-attachments/assets/5bf6d2cb-4296-41c1-991f-3ffc094808ab)
 
 ## Example
-`$ sudo python3 AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore \
-                              --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux \
-                              --output report.html`
+`# ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux`
+
+![image](https://github.com/user-attachments/assets/687ce0ba-e998-4977-9c5b-3669fdd0a77b)
+
 
 ## Analysis Report
 The script generates an HTML report (kdump_analysis_report.html) containing detailed analysis results.
