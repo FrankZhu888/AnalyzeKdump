@@ -13,7 +13,7 @@ DEFAULT_OUTPUT_HTML = "kdump_analysis_report.html"
 # Display usage instructions
 def print_usage():
     usage = """
-Usage: sudo python3 AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]
+Usage: # ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]
 
 Description:
     Analyzes a kdump vmcore file on RHEL systems (e.g., RHEL 8 and RHEL 9) to identify performance issues causing VM hangs,
@@ -28,7 +28,7 @@ Optional Arguments:
     --output    Path to the output HTML report (default: kdump_analysis_report.html)
 
 Example:
-    sudo python3 AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore \\
+    # ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore \\
                                   --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux \\
                                   --output report.html
 
