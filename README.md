@@ -6,11 +6,17 @@
 This tool is particularly useful for system administrators and support engineers working with Red Hat Enterprise Linux (RHEL) or similar distributions.
 
 ## Features
-- Analyzes D-state processes with backtraces.
-- Identifies hung tasks based on kernel log entries (e.g., "blocked for more than X seconds").
-- Evaluates system performance metrics (sys, kmem).
-- Detects potential hung causes (memory, CPU, I/O, interrupts).
-- Generates an HTML report with detailed findings.
+- Analyzes D-state processes: Examines processes in uninterruptible sleep (UN state) with detailed backtraces to identify potential blockages.
+- Identifies hung tasks: Detects tasks blocked for extended periods (e.g., "blocked for more than X seconds") from kernel logs, including associated backtraces.
+- Evaluates system performance metrics: Collects system information (sys), memory usage (kmem -i), and top memory-consuming processes for performance insights.
+- Detects potential hung causes: Analyzes multiple factors including:
+        Memory pressure (with OOM events).
+        CPU scheduling issues (run queue).
+        I/O subsystem problems (e.g., block or SCSI issues).
+        Interrupt statistics (IRQ activity).
+        Network device status (dev -i) and network-related blockages.
+- Provides detailed trace analysis: Generates conclusions from backtraces, identifying CPU-intensive tasks, I/O operations (e.g., blk_, scsi_), and network-related issues (e.g., netif_, tcp_, sock_).
+- Generates an HTML report: Produces a comprehensive HTML report (kdump_analysis_report.html) with structured findings, including system info, logs, and analysis conclusions.
 
 ## Requirements
 - Python 3.x
