@@ -19,28 +19,36 @@ This tool is particularly useful for system administrators and support engineers
 - Root privileges for execution
 
 ## Usage
-sudo python3 AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]
+`# ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]`
+
+![image](https://github.com/user-attachments/assets/5bf6d2cb-4296-41c1-991f-3ffc094808ab)
 
 ## Example
-sudo python3 AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore \
-                              --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux \
-                              --output report.html
+`# ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux`
 
-## Output
+![image](https://github.com/user-attachments/assets/687ce0ba-e998-4977-9c5b-3669fdd0a77b)
 
-An HTML report (default: kdump_analysis_report.html) containing analysis results.
+
+## Analysis Report
+The script generates an HTML report (kdump_analysis_report.html) containing detailed analysis results.
+
+![image](https://github.com/user-attachments/assets/0c83956f-064b-4b78-bbe5-b8b774371bb6)
+
 
 ## Installation
+Clone the repository.
+   
+`$ git clone https://github.com/FrankZhu888/AnalyzeKdump.git`
 
-1. Clone the repository:
-git clone https://github.com/FrankZhu888/AnalyzeKdump.git
-cd AnalyzeKdump
+`$ cd AnalyzeKdump`
 
-2. Ensure dependencies are installed:
-sudo dnf install -y crash python3
-sudo debuginfo-install kernel
+Ensure dependencies are installed.
+   
+`$ sudo dnf install -y crash python3`
 
-3. Run the script with appropriate arguments.
+`$ sudo debuginfo-install kernel`
+
+Run the script with appropriate arguments.
 
 ## Notes
 Ensure the vmcore and vmlinux files match the crashed kernel version.
