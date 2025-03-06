@@ -1,0 +1,530 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Kdump Analysis Report</title>
+        <style>
+            body { font-family: Arial, sans-serif; }
+            table { border-collapse: collapse; width: 80%; margin: 20px; }
+            th, td { border: 1px solid #ddd; padding: 8px; }
+            th { background-color: #f2f2f2; }
+            pre { background-color: #f8f8f8; padding: 10px; white-space: pre-wrap; }
+        </style>
+    </head>
+    <body>
+        <h1>Kdump Analysis Report</h1>
+        <p>Generated on: 2025-03-06 01:45:39 | Support Contact: <a href="mailto:frz@microsoft.com">frz@microsoft.com</a> Microsoft Azure Linux Escalation Team</p>
+
+        <h2>Analysis Conclusions</h2>
+        <pre>Process [kworker/u8:2] (PID: 35) appears to be blocked in an uninterruptible sleep state (D state), possibly waiting for a resource or timer. Check for resource contention or timeouts in related modules.
+Process cat (PID: 2474) appears to be blocked in an uninterruptible sleep state (D state), possibly waiting for a resource or timer. Check for resource contention or timeouts in related modules.
+Process cat (PID: 2476) appears to be blocked in an uninterruptible sleep state (D state), possibly waiting for a resource or timer. Check for resource contention or timeouts in related modules.
+Hung task cat (PID: 2474) blocked for blocked for more than 122 seconds., likely waiting for a resource or driver operation. Check for deadlocks or delays in module 'ffffc0004468fa00'.
+Hung task cat (PID: 2476) blocked for blocked for more than 122 seconds., likely waiting for a resource or driver operation. Check for deadlocks or delays in module 'ffffc000409937a0'.
+Hung task cat (PID: 2474) blocked for blocked for more than 245 seconds., likely waiting for a resource or driver operation. Check for deadlocks or delays in module 'ffffc0004468fa00'.
+Hung task cat (PID: 2476) blocked for blocked for more than 245 seconds., likely waiting for a resource or driver operation. Check for deadlocks or delays in module 'ffffc000409937a0'.
+Kernel panic was manually triggered via SysRq (likely 'crash' command). This is an intentional crash, possibly for testing kdump functionality.</pre>
+
+        <h2>System Information</h2>
+        <pre>KERNEL: /usr/lib/debug/lib/modules/5.14.0-503.26.1.el9_5.x86_64/vmlinux  [TAINTED]
+    DUMPFILE: /var/crash/127.0.0.1-2025-02-26-06:39:15/vmcore  [PARTIAL DUMP]
+        CPUS: 2
+        DATE: Wed Feb 26 06:39:11 UTC 2025
+      UPTIME: 00:08:29
+LOAD AVERAGE: 1.99, 1.30, 0.60
+       TASKS: 307
+    NODENAME: RHEL95kdump
+     RELEASE: 5.14.0-503.26.1.el9_5.x86_64
+     VERSION: #1 SMP PREEMPT_DYNAMIC Mon Feb 10 05:23:56 EST 2025
+     MACHINE: x86_64  (2294 Mhz)
+      MEMORY: 8 GB
+       PANIC: "Kernel panic - not syncing: sysrq triggered crash"</pre>
+
+        <h2>Memory Information</h2>
+        <pre>PAGES        TOTAL      PERCENTAGE
+    TOTAL MEM  1967093       7.5 GB         ----
+         FREE  1682441       6.4 GB   85% of TOTAL MEM
+         USED   284652       1.1 GB   14% of TOTAL MEM
+       SHARED    34309       134 MB    1% of TOTAL MEM
+      BUFFERS     2113       8.3 MB    0% of TOTAL MEM
+       CACHED   168393     657.8 MB    8% of TOTAL MEM
+         SLAB    20123      78.6 MB    1% of TOTAL MEM
+
+   TOTAL HUGE        0            0         ----
+    HUGE FREE        0            0    0% of TOTAL HUGE
+
+   TOTAL SWAP        0            0         ----
+    SWAP USED        0            0    0% of TOTAL SWAP
+    SWAP FREE        0            0    0% of TOTAL SWAP
+
+ COMMIT LIMIT   983546       3.8 GB         ----
+    COMMITTED   492300       1.9 GB   50% of TOTAL LIMIT</pre>
+
+        <h2>Kernel Logs (Errors/Warnings/Bugs)</h2>
+        <pre>[    0.099332] Failed to register legacy timer interrupt
+[    0.104427] MDS CPU bug present and SMT on, data leak possible. See https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/mds.html for more details.
+[    0.104928] TAA CPU bug present and SMT on, data leak possible. See https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/tsx_async_abort.html for more details.
+[    0.104934] MMIO Stale Data CPU bug present and SMT on, data leak possible. See https://www.kernel.org/doc/html/latest/admin-guide/hw-vuln/processor_mmio_stale_data.html for more details.
+[    0.160393] ACPI: _OSC evaluation for CPUs failed, trying _PDC
+[    0.160620] PCI: Using host bridge windows from ACPI; if necessary, use "pci=nocrs" and report a bug
+[    0.163788] iommu: DMA domain TLB invalidation policy: lazy mode
+[    3.115481] Warning: Unmaintained Hardware is detected: mlx4_core:15B3:1004 @ 35b8:00:02.0
+[    4.770727] SGI XFS with ACLs, security attributes, scrub, quota, no debug enabled
+[    7.039464] systemd[1]: Mounting Kernel Debug File System...
+[    7.244861] systemd[1]: Mounted Kernel Debug File System.
+[   12.233067] Warning: Unmaintained driver is detected: nft_compat
+[  202.122536] dstate_test: module verification failed: signature and/or required key missing - tainting kernel</pre>
+
+        <h2>D State Processes and Backtraces</h2>
+        
+        <table>
+            <tr><th>PID</th><th>Process Name</th><th>Backtrace</th></tr>
+            
+            <tr>
+                <td>35</td>
+                <td>[kworker/u8:2]</td>
+                <td><pre>PID: 35       TASK: ffff9ed240380000  CPU: 0    COMMAND: "kworker/u8:2"
+ #0 [ffffc00040157ba0] __schedule at ffffffffb86dd369
+ #1 [ffffc00040157c08] schedule at ffffffffb86dd6ce
+ #2 [ffffc00040157c20] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc00040157c88] __wait_for_common at ffffffffb86de373
+ #4 [ffffc00040157d00] mlx4_comm_cmd_wait at ffffffffc0582c02 [mlx4_core]
+ #5 [ffffc00040157d48] mlx4_slave_cmd at ffffffffc0584f54 [mlx4_core]
+ #6 [ffffc00040157d90] mlx4_en_DUMP_ETH_STATS at ffffffffc0600f61 [mlx4_en]
+ #7 [ffffc00040157e58] mlx4_en_do_get_stats at ffffffffc060598f [mlx4_en]
+ #8 [ffffc00040157e88] process_one_work at ffffffffb7b2fb57
+ #9 [ffffc00040157ec8] worker_thread at ffffffffb7b3071e
+#10 [ffffc00040157f18] kthread at ffffffffb7b38ac0
+#11 [ffffc00040157f50] ret_from_fork at ffffffffb7a03e8c</pre></td>
+            </tr>
+            
+            <tr>
+                <td>2474</td>
+                <td>cat</td>
+                <td><pre>PID: 2474     TASK: ffff9ed243893900  CPU: 1    COMMAND: "cat"
+ #0 [ffffc0004468fa00] __schedule at ffffffffb86dd369
+ #1 [ffffc0004468fa68] schedule at ffffffffb86dd6ce
+ #2 [ffffc0004468fa80] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc0004468fae8] msleep at ffffffffb7bd86a9
+ #4 [ffffc0004468faf8] dev_open at ffffffffc0eb003c [dstate_test]
+ #5 [ffffc0004468fb00] chrdev_open at ffffffffb7e4fbf3
+ #6 [ffffc0004468fb48] do_dentry_open at ffffffffb7e438ff
+ #7 [ffffc0004468fb80] do_open at ffffffffb7e5bc6a
+ #8 [ffffc0004468fbc0] path_openat at ffffffffb7e5e861
+ #9 [ffffc0004468fc18] do_filp_open at ffffffffb7e5fbb2
+#10 [ffffc0004468fd38] do_sys_openat2 at ffffffffb7e45c66
+#11 [ffffc0004468fd80] __x64_sys_openat at ffffffffb7e460b3
+#12 [ffffc0004468fda8] do_syscall_64 at ffffffffb86cd45f
+#13 [ffffc0004468ff50] entry_SYSCALL_64_after_hwframe at ffffffffb8800130
+    RIP: 00007ff26bafd80b  RSP: 00007ffde45ce830  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 00005609d1bdcc94  RCX: 00007ff26bafd80b
+    RDX: 0000000000000000  RSI: 00007ffde45d06b4  RDI: 00000000ffffff9c
+    RBP: 00007ffde45d06b4   R8: 0000000000000001   R9: 0000000000000000
+    R10: 0000000000000000  R11: 0000000000000246  R12: 0000000000000000
+    R13: 00005609d1bdeac0  R14: 00007ffde45d06b0  R15: 0000000000020000
+    ORIG_RAX: 0000000000000101  CS: 0033  SS: 002b</pre></td>
+            </tr>
+            
+            <tr>
+                <td>2476</td>
+                <td>cat</td>
+                <td><pre>PID: 2476     TASK: ffff9ed24256d580  CPU: 1    COMMAND: "cat"
+ #0 [ffffc000409937a0] __schedule at ffffffffb86dd369
+ #1 [ffffc00040993808] schedule at ffffffffb86dd6ce
+ #2 [ffffc00040993820] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc00040993888] msleep at ffffffffb7bd86a9
+ #4 [ffffc00040993898] dev_open at ffffffffc0eb003c [dstate_test]
+ #5 [ffffc000409938a0] chrdev_open at ffffffffb7e4fbf3
+ #6 [ffffc000409938e8] do_dentry_open at ffffffffb7e438ff
+ #7 [ffffc00040993920] do_open at ffffffffb7e5bc6a
+ #8 [ffffc00040993960] path_openat at ffffffffb7e5e861
+ #9 [ffffc000409939b8] do_filp_open at ffffffffb7e5fbb2
+#10 [ffffc00040993ad8] do_sys_openat2 at ffffffffb7e45c66
+#11 [ffffc00040993b20] __x64_sys_openat at ffffffffb7e460b3
+#12 [ffffc00040993b48] do_syscall_64 at ffffffffb86cd45f
+#13 [ffffc00040993f50] entry_SYSCALL_64_after_hwframe at ffffffffb8800130
+    RIP: 00007f82fc2fd80b  RSP: 00007ffd09d187d0  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 000055883fe86c94  RCX: 00007f82fc2fd80b
+    RDX: 0000000000000000  RSI: 00007ffd09d1a6b4  RDI: 00000000ffffff9c
+    RBP: 00007ffd09d1a6b4   R8: 0000000000000001   R9: 0000000000000000
+    R10: 0000000000000000  R11: 0000000000000246  R12: 0000000000000000
+    R13: 000055883fe88ac0  R14: 00007ffd09d1a6b0  R15: 0000000000020000
+    ORIG_RAX: 0000000000000101  CS: 0033  SS: 002b</pre></td>
+            </tr>
+            
+        </table>
+        
+
+        <h2>Hung Tasks and Backtraces</h2>
+        
+        <table>
+            <tr><th>PID</th><th>Process Name</th><th>Blocked Time</th><th>Backtrace</th></tr>
+            
+            <tr>
+                <td>2474</td>
+                <td>cat</td>
+                <td>blocked for more than 122 seconds.</td>
+                <td><pre>PID: 2474     TASK: ffff9ed243893900  CPU: 1    COMMAND: "cat"
+ #0 [ffffc0004468fa00] __schedule at ffffffffb86dd369
+ #1 [ffffc0004468fa68] schedule at ffffffffb86dd6ce
+ #2 [ffffc0004468fa80] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc0004468fae8] msleep at ffffffffb7bd86a9
+ #4 [ffffc0004468faf8] dev_open at ffffffffc0eb003c [dstate_test]
+ #5 [ffffc0004468fb00] chrdev_open at ffffffffb7e4fbf3
+ #6 [ffffc0004468fb48] do_dentry_open at ffffffffb7e438ff
+ #7 [ffffc0004468fb80] do_open at ffffffffb7e5bc6a
+ #8 [ffffc0004468fbc0] path_openat at ffffffffb7e5e861
+ #9 [ffffc0004468fc18] do_filp_open at ffffffffb7e5fbb2
+#10 [ffffc0004468fd38] do_sys_openat2 at ffffffffb7e45c66
+#11 [ffffc0004468fd80] __x64_sys_openat at ffffffffb7e460b3
+#12 [ffffc0004468fda8] do_syscall_64 at ffffffffb86cd45f
+#13 [ffffc0004468ff50] entry_SYSCALL_64_after_hwframe at ffffffffb8800130
+    RIP: 00007ff26bafd80b  RSP: 00007ffde45ce830  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 00005609d1bdcc94  RCX: 00007ff26bafd80b
+    RDX: 0000000000000000  RSI: 00007ffde45d06b4  RDI: 00000000ffffff9c
+    RBP: 00007ffde45d06b4   R8: 0000000000000001   R9: 0000000000000000
+    R10: 0000000000000000  R11: 0000000000000246  R12: 0000000000000000
+    R13: 00005609d1bdeac0  R14: 00007ffde45d06b0  R15: 0000000000020000
+    ORIG_RAX: 0000000000000101  CS: 0033  SS: 002b</pre></td>
+            </tr>
+            
+            <tr>
+                <td>2476</td>
+                <td>cat</td>
+                <td>blocked for more than 122 seconds.</td>
+                <td><pre>PID: 2476     TASK: ffff9ed24256d580  CPU: 1    COMMAND: "cat"
+ #0 [ffffc000409937a0] __schedule at ffffffffb86dd369
+ #1 [ffffc00040993808] schedule at ffffffffb86dd6ce
+ #2 [ffffc00040993820] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc00040993888] msleep at ffffffffb7bd86a9
+ #4 [ffffc00040993898] dev_open at ffffffffc0eb003c [dstate_test]
+ #5 [ffffc000409938a0] chrdev_open at ffffffffb7e4fbf3
+ #6 [ffffc000409938e8] do_dentry_open at ffffffffb7e438ff
+ #7 [ffffc00040993920] do_open at ffffffffb7e5bc6a
+ #8 [ffffc00040993960] path_openat at ffffffffb7e5e861
+ #9 [ffffc000409939b8] do_filp_open at ffffffffb7e5fbb2
+#10 [ffffc00040993ad8] do_sys_openat2 at ffffffffb7e45c66
+#11 [ffffc00040993b20] __x64_sys_openat at ffffffffb7e460b3
+#12 [ffffc00040993b48] do_syscall_64 at ffffffffb86cd45f
+#13 [ffffc00040993f50] entry_SYSCALL_64_after_hwframe at ffffffffb8800130
+    RIP: 00007f82fc2fd80b  RSP: 00007ffd09d187d0  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 000055883fe86c94  RCX: 00007f82fc2fd80b
+    RDX: 0000000000000000  RSI: 00007ffd09d1a6b4  RDI: 00000000ffffff9c
+    RBP: 00007ffd09d1a6b4   R8: 0000000000000001   R9: 0000000000000000
+    R10: 0000000000000000  R11: 0000000000000246  R12: 0000000000000000
+    R13: 000055883fe88ac0  R14: 00007ffd09d1a6b0  R15: 0000000000020000
+    ORIG_RAX: 0000000000000101  CS: 0033  SS: 002b</pre></td>
+            </tr>
+            
+            <tr>
+                <td>2474</td>
+                <td>cat</td>
+                <td>blocked for more than 245 seconds.</td>
+                <td><pre>PID: 2474     TASK: ffff9ed243893900  CPU: 1    COMMAND: "cat"
+ #0 [ffffc0004468fa00] __schedule at ffffffffb86dd369
+ #1 [ffffc0004468fa68] schedule at ffffffffb86dd6ce
+ #2 [ffffc0004468fa80] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc0004468fae8] msleep at ffffffffb7bd86a9
+ #4 [ffffc0004468faf8] dev_open at ffffffffc0eb003c [dstate_test]
+ #5 [ffffc0004468fb00] chrdev_open at ffffffffb7e4fbf3
+ #6 [ffffc0004468fb48] do_dentry_open at ffffffffb7e438ff
+ #7 [ffffc0004468fb80] do_open at ffffffffb7e5bc6a
+ #8 [ffffc0004468fbc0] path_openat at ffffffffb7e5e861
+ #9 [ffffc0004468fc18] do_filp_open at ffffffffb7e5fbb2
+#10 [ffffc0004468fd38] do_sys_openat2 at ffffffffb7e45c66
+#11 [ffffc0004468fd80] __x64_sys_openat at ffffffffb7e460b3
+#12 [ffffc0004468fda8] do_syscall_64 at ffffffffb86cd45f
+#13 [ffffc0004468ff50] entry_SYSCALL_64_after_hwframe at ffffffffb8800130
+    RIP: 00007ff26bafd80b  RSP: 00007ffde45ce830  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 00005609d1bdcc94  RCX: 00007ff26bafd80b
+    RDX: 0000000000000000  RSI: 00007ffde45d06b4  RDI: 00000000ffffff9c
+    RBP: 00007ffde45d06b4   R8: 0000000000000001   R9: 0000000000000000
+    R10: 0000000000000000  R11: 0000000000000246  R12: 0000000000000000
+    R13: 00005609d1bdeac0  R14: 00007ffde45d06b0  R15: 0000000000020000
+    ORIG_RAX: 0000000000000101  CS: 0033  SS: 002b</pre></td>
+            </tr>
+            
+            <tr>
+                <td>2476</td>
+                <td>cat</td>
+                <td>blocked for more than 245 seconds.</td>
+                <td><pre>PID: 2476     TASK: ffff9ed24256d580  CPU: 1    COMMAND: "cat"
+ #0 [ffffc000409937a0] __schedule at ffffffffb86dd369
+ #1 [ffffc00040993808] schedule at ffffffffb86dd6ce
+ #2 [ffffc00040993820] schedule_timeout at ffffffffb86e3268
+ #3 [ffffc00040993888] msleep at ffffffffb7bd86a9
+ #4 [ffffc00040993898] dev_open at ffffffffc0eb003c [dstate_test]
+ #5 [ffffc000409938a0] chrdev_open at ffffffffb7e4fbf3
+ #6 [ffffc000409938e8] do_dentry_open at ffffffffb7e438ff
+ #7 [ffffc00040993920] do_open at ffffffffb7e5bc6a
+ #8 [ffffc00040993960] path_openat at ffffffffb7e5e861
+ #9 [ffffc000409939b8] do_filp_open at ffffffffb7e5fbb2
+#10 [ffffc00040993ad8] do_sys_openat2 at ffffffffb7e45c66
+#11 [ffffc00040993b20] __x64_sys_openat at ffffffffb7e460b3
+#12 [ffffc00040993b48] do_syscall_64 at ffffffffb86cd45f
+#13 [ffffc00040993f50] entry_SYSCALL_64_after_hwframe at ffffffffb8800130
+    RIP: 00007f82fc2fd80b  RSP: 00007ffd09d187d0  RFLAGS: 00000246
+    RAX: ffffffffffffffda  RBX: 000055883fe86c94  RCX: 00007f82fc2fd80b
+    RDX: 0000000000000000  RSI: 00007ffd09d1a6b4  RDI: 00000000ffffff9c
+    RBP: 00007ffd09d1a6b4   R8: 0000000000000001   R9: 0000000000000000
+    R10: 0000000000000000  R11: 0000000000000246  R12: 0000000000000000
+    R13: 000055883fe88ac0  R14: 00007ffd09d1a6b0  R15: 0000000000020000
+    ORIG_RAX: 0000000000000101  CS: 0033  SS: 002b</pre></td>
+            </tr>
+            
+        </table>
+        
+
+        <h2>Potential Hung Causes</h2>
+        <h3>Kernel Panic</h3>
+        <pre>       PANIC: "Kernel panic - not syncing: sysrq triggered crash"</pre>
+        <p>Panic Trace: <pre>[  509.332157] Kernel panic - not syncing: sysrq triggered crash
+[  509.356569] CPU: 1 PID: 2624 Comm: tee Kdump: loaded Tainted: G           OE     -------  ---  5.14.0-503.26.1.el9_5.x86_64 #1
+[  509.372670] Hardware name: Microsoft Corporation Virtual Machine/Virtual Machine, BIOS Hyper-V UEFI Release v4.1 03/08/2024
+[  509.386922] Call Trace:
+[  509.389407]  <TASK>
+[  509.394788]  dump_stack_lvl+0x34/0x48
+[  509.399353]  panic+0x107/0x2bb
+[  509.403237]  ? _printk+0x58/0x73
+[  509.407619]  sysrq_handle_crash+0x16/0x20
+[  509.411710]  __handle_sysrq.cold+0x7c/0x115
+[  509.416686]  write_sysrq_trigger+0x24/0x40
+[  509.421672]  proc_reg_write+0x56/0xa0
+[  509.426319]  vfs_write+0xe7/0x410
+[  509.432762]  ksys_write+0x5f/0xe0
+[  509.436911]  do_syscall_64+0x5f/0xf0
+[  509.441617]  ? syscall_exit_work+0x103/0x130
+[  509.446423]  ? syscall_exit_to_user_mode+0x19/0x40
+[  509.451373]  ? do_syscall_64+0x6b/0xf0
+[  509.455459]  ? __rseq_handle_notify_resume+0x26/0xb0
+[  509.462218]  ? exit_to_user_mode_loop+0xd9/0x130
+[  509.468181]  ? exit_to_user_mode_prepare+0xb9/0x100
+[  509.474077]  ? syscall_exit_to_user_mode+0x19/0x40
+[  509.480741]  ? do_syscall_64+0x6b/0xf0
+[  509.486270]  ? exc_page_fault+0x62/0x150
+[  509.491965]  entry_SYSCALL_64_after_hwframe+0x78/0x80
+[  509.498208] RIP: 0033:0x7fcbe70fdb57
+[  509.506248] Code: 0f 00 f7 d8 64 89 02 48 c7 c0 ff ff ff ff eb b7 0f 1f 00 f3 0f 1e fa 64 8b 04 25 18 00 00 00 85 c0 75 10 b8 01 00 00 00 0f 05 <48> 3d 00 f0 ff ff 77 51 c3 48 83 ec 28 48 89 54 24 18 48 89 74 24
+[  509.530440] RSP: 002b:00007ffc869f05f8 EFLAGS: 00000246 ORIG_RAX: 0000000000000001
+[  509.536942] RAX: ffffffffffffffda RBX: 0000000000000002 RCX: 00007fcbe70fdb57
+[  509.545235] RDX: 0000000000000002 RSI: 00007ffc869f0710 RDI: 0000000000000003
+[  509.554321] RBP: 00007ffc869f0710 R08: 0000000000000004 R09: 0000000000000001
+[  509.564141] R10: 00000000000001b6 R11: 0000000000000246 R12: 0000000000000002
+[  509.572443] R13: 00005614b2c482c0 R14: 0000000000000002 R15: 00007fcbe71f59e0
+[  509.581104]  </TASK>
+[  509.585029] Kernel Offset: 0x36a00000 from 0xffffffff81000000 (relocation range: 0xffffffff80000000-0xffffffffbfffffff)</pre></p>
+
+        <h3>CPU Scheduling (Run Queue)</h3>
+        <pre>CPU 0 RUNQUEUE: ffff9ed3f7c339c0
+  CURRENT: PID: 0      TASK: ffffffffb981a8c0  COMMAND: "swapper/0"
+  RT PRIO_ARRAY: ffff9ed3f7c33c80
+     [no tasks queued]
+  CFS RB_ROOT: ffff9ed3f7c33a80
+     [no tasks queued]
+
+CPU 1 RUNQUEUE: ffff9ed3f7d339c0
+  CURRENT: PID: 2624   TASK: ffff9ed243891c80  COMMAND: "tee"
+  RT PRIO_ARRAY: ffff9ed3f7d33c80
+     [no tasks queued]
+  CFS RB_ROOT: ffff9ed3f7d33a80
+     [120] PID: 2581   TASK: ffff9ed24944b900  COMMAND: "kworker/1:0"</pre>
+
+        <h3>Memory Pressure</h3>
+        <pre>PAGES        TOTAL      PERCENTAGE
+    TOTAL MEM  1967093       7.5 GB         ----
+         FREE  1682441       6.4 GB   85% of TOTAL MEM
+         USED   284652       1.1 GB   14% of TOTAL MEM
+       SHARED    34309       134 MB    1% of TOTAL MEM
+      BUFFERS     2113       8.3 MB    0% of TOTAL MEM
+       CACHED   168393     657.8 MB    8% of TOTAL MEM
+         SLAB    20123      78.6 MB    1% of TOTAL MEM
+
+   TOTAL HUGE        0            0         ----
+    HUGE FREE        0            0    0% of TOTAL HUGE
+
+   TOTAL SWAP        0            0         ----
+    SWAP USED        0            0    0% of TOTAL SWAP
+    SWAP FREE        0            0    0% of TOTAL SWAP
+
+ COMMIT LIMIT   983546       3.8 GB         ----
+    COMMITTED   492300       1.9 GB   50% of TOTAL LIMIT</pre>
+        <p>OOM Events: <pre>No OOM events detected.</pre></p>
+        <h4>Top 9 Memory Consuming Processes</h4>
+        
+        <table>
+            <tr><th>PID</th><th>PPID</th><th>CPU</th><th>State</th><th>%MEM</th><th>VSZ</th><th>RSS</th><th>Command</th></tr>
+            
+            <tr>
+                <td>953</td>
+                <td>1</td>
+                <td>0</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>996</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>997</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>999</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>1000</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>1001</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>1002</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>1004</td>
+                <td>1</td>
+                <td>0</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+            <tr>
+                <td>1005</td>
+                <td>1</td>
+                <td>1</td>
+                <td>IN</td>
+                <td>1.1</td>
+                <td>980592</td>
+                <td>131500</td>
+                <td>wdavdaemon</td>
+            </tr>
+            
+        </table>
+        
+
+        <h3>I/O Subsystem Issues</h3>
+        <pre>[    0.099334] APIC: Switch to symmetric I/O mode setup
+[    0.226828] 00:00: ttyS0 at I/O 0x3f8 (irq = 4, base_baud = 115200) is a 16550A
+[    0.228260] 00:01: ttyS1 at I/O 0x2f8 (irq = 3, base_baud = 115200) is a 16550A
+[    2.441303] scsi host1: storvsc_host_t
+[    2.443553] scsi host0: storvsc_host_t
+[    2.444279] scsi 0:0:0:0: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[    2.446897] scsi 0:0:0:1: Direct-Access     Msft     Virtual Disk     1.0  PQ: 0 ANSI: 5
+[    2.504314] scsi 0:0:0:0: Attached scsi generic sg0 type 0
+[    2.505925] scsi 0:0:0:1: Attached scsi generic sg1 type 0
+[    7.382096] systemd[1]: Special handling of early boot iSCSI sessions was skipped because of an unmet condition check (ConditionDirectoryNotEmpty=/sys/class/iscsi_session).</pre>
+
+        <h3>Network Devices</h3>
+        <pre>RESOURCE        RANGE    NAME
+ffffffffb98569a0  0000-ffff  PCI IO
+ffffffffb982dea0  0000-001f  dma1
+ffffffffb982dee0  0020-0021  pic1
+ffffffffb982df20  0040-0043  timer0
+ffffffffb982df60  0050-0053  timer1
+ffffffffb982dfa0  0060-0060  keyboard
+ffffffffb982dfe0  0064-0064  keyboard
+ffff9ed240a299c0  0070-0071  rtc0
+ffffffffb982e020  0080-008f  dma page reg
+ffffffffb982e060  00a0-00a1  pic2
+ffffffffb982e0a0  00c0-00df  dma2
+ffffffffb982e0e0  00f0-00ff  fpu
+ffff9ed241c9e9c0  02f8-02ff  serial
+ffff9ed241c9eb00  03f8-03ff  serial
+ffff9ed241891500  0400-0403  ACPI PM1a_EVT_BLK
+ffff9ed2418916c0  0404-0405  ACPI PM1a_CNT_BLK
+ffff9ed2418915c0  0408-040b  ACPI PM_TMR
+ffff9ed241891640  040c-040f  ACPI GPE0_BLK
+
+    RESOURCE            RANGE        NAME
+ffffffffb9856960  00000000-3fffffffffff  PCI mem
+ffff9ed3fffc8700  00000000-00000fff  Reserved
+ffff9ed3fffc8740  00001000-0009ffff  System RAM
+ffff9ed3fffc8780  000c0000-000fffff  Reserved
+ffffffffb982e6a0  000f0000-000fffff  System ROM
+ffff9ed3fffc87c0  00100000-3eed6fff  System RAM
+ffffffffb9c48920  23000000-32ffffff  Crash kernel
+ffff9ed3fffc8800  3eed7000-3eeddfff  Reserved
+ffff9ed3fffc8840  3eede000-3ff40fff  System RAM
+ffff9ed3fffc8880  3ff41000-3ffc8fff  Reserved
+ffff9ed3fffc88c0  3ffc9000-3fffafff  ACPI Tables
+ffff9ed3fffc8900  3fffb000-3fffefff  ACPI Non-volatile Storage
+ffff9ed3fffc8940  3ffff000-3fffffff  System RAM
+ffff9ed24220f200  40000000-407fffff  5620e0c7-8062-4dce-aeb7-520c7ef76171
+ffff9ed249379d80  40800000-40801fff  0660ff5b-35b8-4d24-a23d-8181bb33035d
+ffff9ed3f7c414c0  fec00000-fec00fff  PNP0003:00
+ffff9ed3f7c41480  fee00000-fee00fff  PNP0003:00
+ffff9ed3fffc8980  100000000-2bfffffff  System RAM
+ffffffffb982e160  162000000-162ffffff  Kernel code
+ffffffffb982e1e0  163000000-163c99fff  Kernel rodata
+ffffffffb982e1a0  163e00000-16438d73f  Kernel data
+ffffffffb982e120  164c76000-1651fffff  Kernel bss
+ffff9ed249379480  fe0000000-fe07fffff  0660ff5b-35b8-4d24-a23d-8181bb33035d
+ffff9ed24962a450  fe0000000-fe07fffff  35b8:00:02.0
+ffff9ed249379dc0  fe0000000-fe07fffff  mlx4_core</pre>
+
+        <h3>Interrupt Statistics</h3>
+        <pre>IRQ   IRQ_DESC/_DATA      IRQACTION      NAME
+  4   ffff9ed2401eb200  ffff9ed249fc4400  "ttyS0"
+  8   ffff9ed2401eae00  ffff9ed3f7c41580  "rtc0"
+  9   ffff9ed2401ebe00  ffff9ed3f7c41080  "acpi"
+ 24   ffff9ed241823000  ffff9ed2473fc300  "mlx4-async@pci:35b8:00:02.0"
+ 25   ffff9ed241823c00  ffff9ed2468e0c80  "mlx4-1@35b8:00:02.0"
+ 26   ffff9ed241822800  ffff9ed2468e0780  "mlx4-2@35b8:00:02.0"</pre>
+
+    </body>
+    </html>
+    
