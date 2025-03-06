@@ -29,8 +29,11 @@ This tool is particularly useful for system administrators and support engineers
                               --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux \
                               --output report.html`
 
-## Output
-An HTML report (default: kdump_analysis_report.html) containing analysis results.
+## Analysis Report
+The script generates an HTML report (kdump_analysis_report.html) containing detailed analysis results.
+
+![image](https://github.com/user-attachments/assets/0c83956f-064b-4b78-bbe5-b8b774371bb6)
+
 
 ## Installation
 Clone the repository.
