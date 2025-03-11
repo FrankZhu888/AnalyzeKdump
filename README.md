@@ -19,7 +19,7 @@ This tool is particularly useful for system administrators and support engineers
 - Generates an HTML report: Produces a comprehensive HTML report (kdump_analysis_report.html) with structured findings, including system info, logs, and analysis conclusions.
 
 ## Requirements
-- Python 3.x
+- Python 3.7+
 - `crash` utility (install via `dnf install crash`)
 - `kernel-debuginfo` (install via `debuginfo-install kernel`)
 - Root privileges for execution
