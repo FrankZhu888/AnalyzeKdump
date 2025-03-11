@@ -51,11 +51,10 @@ def setup_crash_environment():
     try:
         subprocess.run(["crash", "--version"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         log_progress("Crash environment is already installed, skipping setup.")
-    except subprocess.CalledProcessError:
+    except FileNotFoundError:
         log_progress("Crash not found, installing crash environment...")
         try:
             subprocess.run(["sudo", "dnf", "install", "-y", "crash"], check=True)
-            subprocess.run(["sudo", "debuginfo-install", "kernel"], check=True)
             log_progress("Crash environment installed successfully.")
         except subprocess.CalledProcessError as e:
             raise Exception(f"Failed to install crash environment: {e}")
