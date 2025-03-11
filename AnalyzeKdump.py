@@ -16,7 +16,7 @@ def print_usage():
 Usage: # ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]
 
 Description:
-    Analyzes a kdump vmcore file on RHEL systems (e.g., RHEL 8 and RHEL 9) to identify performance issues causing VM hangs,
+    Analyzes a kdump vmcore file on RHEL9 systems to identify performance issues causing VM hangs,
     including D state processes, hung tasks, potential hung causes, backtraces, kernel logs, and system memory info.
     Outputs results to an HTML report.
 
