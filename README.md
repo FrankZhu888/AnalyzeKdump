@@ -3,7 +3,7 @@
 ## Description
 `AnalyzeKdump` is a Python script designed to analyze Linux kdump vmcore files for diagnosing VM hangs and performance issues. It extracts critical information such as D-state processes, hung tasks, kernel logs, system performance metrics, and potential hung causes (e.g., memory pressure, CPU scheduling, I/O issues, and interrupt statistics). The results are presented in a concise HTML report, making it easy to identify root causes of system failures.
 
-This tool is particularly useful for system administrators and support engineers working with Red Hat Enterprise Linux (RHEL) or similar distributions.
+This tool is particularly useful for system administrators and support engineers working with Red Hat Enterprise Linux (RHEL9) or similar distributions.
 
 ## Features
 - Analyzes D-state processes: Examines processes in uninterruptible sleep (UN state) with detailed backtraces to identify potential blockages.
@@ -58,7 +58,10 @@ Ensure dependencies are installed.
 Run the script with appropriate arguments.
 
 ## Notes
+For now only RHEL9 is supported.
+
 Ensure the vmcore and vmlinux files match the crashed kernel version.
+
 The script requires root privileges to install dependencies and access vmcore files.
 
 ## Support Contact
