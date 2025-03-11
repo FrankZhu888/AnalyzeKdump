@@ -27,7 +27,8 @@ This tool is particularly useful for system administrators and support engineers
 ## Usage
 `# ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]`
 
-![image](https://github.com/user-attachments/assets/5bf6d2cb-4296-41c1-991f-3ffc094808ab)
+![image](https://github.com/user-attachments/assets/634cc320-4c3d-456c-80d4-a27065a74b4e)
+
 
 ## Example
 `# ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-25-08:03:04/vmcore --vmlinux /usr/lib/debug/lib/modules/5.14.0-162.el9.x86_64/vmlinux`
