@@ -39,7 +39,8 @@ This tool is particularly useful for system administrators and support engineers
 ## Analysis Report
 The script generates an HTML report (kdump_analysis_report.html) containing detailed analysis results.
 
-![image](https://github.com/user-attachments/assets/0c83956f-064b-4b78-bbe5-b8b774371bb6)
+![image](https://github.com/user-attachments/assets/3eab45d3-1f6e-427c-bfb6-b7f1894e4ebb)
+
 
 
 ## Installation
