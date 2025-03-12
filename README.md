@@ -3,7 +3,7 @@
 ## Description
 `AnalyzeKdump` is a Python script designed to analyze Linux kdump vmcore files for diagnosing VM hangs and performance issues. It extracts critical information such as D-state processes, hung tasks, kernel logs, system performance metrics, and potential hung causes (e.g., memory pressure, CPU scheduling, I/O issues, and interrupt statistics). The results are presented in a concise HTML report, making it easy to identify root causes of system failures.
 
-This tool is particularly useful for system administrators and support engineers working with Red Hat Enterprise Linux (RHEL9) or similar distributions.
+This tool is particularly useful for system administrators and support engineers working with Red Hat Enterprise Linux (RHEL8 and RHEL9) or similar distributions.
 
 ## Features
 - Analyzes D-state processes: Examines processes in uninterruptible sleep (UN state) with detailed backtraces to identify potential blockages.
@@ -19,7 +19,7 @@ This tool is particularly useful for system administrators and support engineers
 - Generates an HTML report: Produces a comprehensive HTML report (kdump_analysis_report.html) with structured findings, including system info, logs, and analysis conclusions.
 
 ## Requirements
-- Python 3.7+
+- Python 3+
 - `crash` utility (install via `dnf install crash`)
 - `kernel-debuginfo` (install via `debuginfo-install kernel`)
 - Root privileges for execution
@@ -27,7 +27,7 @@ This tool is particularly useful for system administrators and support engineers
 ## Usage
 `# ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]`
 
-![image](https://github.com/user-attachments/assets/634cc320-4c3d-456c-80d4-a27065a74b4e)
+![image](https://github.com/user-attachments/assets/7a5e3398-1fa9-41d0-bd9a-e170e397b1e5)
 
 
 ## Example
@@ -58,7 +58,7 @@ Ensure dependencies are installed.
 Run the script with appropriate arguments.
 
 ## Notes
-For now only RHEL9 is supported.
+For now RHEL8 and RHEL9 are supported.
 
 Ensure the vmcore and vmlinux files match the crashed kernel version.
 
