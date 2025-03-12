@@ -32,7 +32,8 @@ This tool is particularly useful for system administrators and support engineers
 ## Example
 `# ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-26-06\:39\:15/vmcore --vmlinux /usr/lib/debug/lib/modules/5.14.0-503.26.1.el9_5.x86_64/vmlinux`
 
-![image](https://github.com/user-attachments/assets/c25b3c47-71f8-4640-8fc1-01d2bdf74dc8)
+![image](https://github.com/user-attachments/assets/a0bbfeff-3fc7-434e-8f03-958acc48ab17)
+
 
 ## Analysis Report
 The script generates an HTML report (kdump_analysis_report.html) containing detailed analysis results.
