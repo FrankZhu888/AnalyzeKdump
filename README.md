@@ -51,7 +51,7 @@ Clone the repository.
 
 Ensure dependencies are installed.
    
-`$ sudo dnf install -y crash python3`
+`$ sudo dnf install -y crash`
 
 `$ sudo debuginfo-install kernel`
 
