@@ -1,9 +1,12 @@
 #!/usr/bin/env python3
-# Written by Frank Zhu <frz@microsoft.com> 02.25.2025
+# Written by Frank Zhu <frz@microsoft.com>              02.25.2025
+# Updated to support both RHEL 8 and RHEL 9 releases    03.12.2025
 
 import subprocess
 import os
 import sys
+import platform
+import re
 from jinja2 import Template
 from datetime import datetime
 
@@ -16,7 +19,7 @@ def print_usage():
 Usage: # ./AnalyzeKdump.py --vmcore <vmcore_path> --vmlinux <vmlinux_path> [--output <output_html>]
 
 Description:
-    Analyzes a kdump vmcore file on RHEL9 systems to identify performance issues causing VM hangs,
+    Analyzes a kdump vmcore file on RHEL 8 and RHEL 9 systems to identify performance issues causing VM hangs,
     including D state processes, hung tasks, potential hung causes, backtraces, kernel logs, and system memory info.
     Outputs results to an HTML report.
 
@@ -59,17 +62,104 @@ def setup_crash_environment():
         except subprocess.CalledProcessError as e:
             raise Exception(f"Failed to install crash environment: {e}")
 
-# Execute crash command and filter redundant information
-def run_crash_command(command, vmcore_path, vmlinux_path):
+# Detect RHEL version
+def get_rhel_version():
+    """
+    Detect the RHEL version of the current system.
+    Returns '8' for RHEL 8, '9' for RHEL 9, or raises an exception if undetermined.
+    """
+    try:
+        with open("/etc/os-release", "r") as f:
+            content = f.read()
+            match = re.search(r'VERSION_ID="(\d+)\.\d+"', content)
+            if match:
+                major_version = match.group(1)
+                if major_version in ["8", "9"]:
+                    return major_version
+        # Fallback to platform if os-release fails
+        release = platform.release()
+        if "el8" in release:
+            return "8"
+        elif "el9" in release:
+            return "9"
+        raise Exception("Unable to determine RHEL version.")
+    except Exception as e:
+        log_progress(f"Error detecting RHEL version: {e}")
+        raise Exception("System version detection failed. Ensure running on RHEL 8 or 9.")
+
+# RHEL 8-specific crash command execution and filtering
+def run_crash_command_rhel8(command, vmcore_path, vmlinux_path, debug=False):
+    """
+    Execute a crash command on RHEL 8 and return its filtered output.
+    Designed for crash 7 without 'crash>' prompt.
+    """
     full_cmd = ["crash", vmlinux_path, vmcore_path]
-    process = subprocess.Popen(full_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1024*1024)
+    process = subprocess.Popen(full_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1024*1024)
     stdout, stderr = process.communicate(input=f"{command}\nquit\n")
+
+    if debug:
+        log_progress(f"Raw output for '{command}' (RHEL 8):\n{stdout}")
+
+    if process.returncode != 0:
+        raise Exception(f"Crash command failed: {stderr}\nCommand: {command}\nFull command: {' '.join(full_cmd)}")
+
+    lines = stdout.splitlines()
+    filtered_output = []
+    state_found = False
+    capture = False
+
+    for line in lines:
+        # Skip copyright and irrelevant lines
+        if any(keyword in line for keyword in [
+            "crash ", "Copyright", "GNU gdb (GDB)", "This GDB was configured", "Type", "For help",
+            "please wait...", "NOTE: stdin: not a tty", "quit", "License GPLv3+", "This program",
+            "show copying", "show warranty", "free software", "no warranty"
+        ]):
+            continue
+
+        # Skip system initialization info until STATE:
+        if "STATE:" in line:
+            state_found = True
+            continue
+
+        # After STATE:, wait for blank line to start capturing
+        if state_found and not line.strip() and not capture:
+            capture = True
+            continue
+
+        if capture:
+            filtered_output.append(line)
+
+    output = "\n".join(filtered_output).strip()
+
+    if debug:
+        log_progress(f"Filtered output for '{command}' (RHEL 8):\n{output}")
+
+    if not output:
+        log_progress(f"Warning: No valid output from command '{command}'")
+
+    return output
+
+# RHEL 9-specific crash command execution and filtering
+def run_crash_command_rhel9(command, vmcore_path, vmlinux_path, debug=False):
+    """
+    Execute a crash command on RHEL 9 and return its filtered output.
+    Designed for crash 8.0.5 with 'crash>' prompt.
+    """
+    full_cmd = ["crash", vmlinux_path, vmcore_path]
+    process = subprocess.Popen(full_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1024*1024)
+    stdout, stderr = process.communicate(input=f"{command}\nquit\n")
+
+    if debug:
+        log_progress(f"Raw output for '{command}' (RHEL 9):\n{stdout}")
+
     if process.returncode != 0:
         raise Exception(f"Crash command failed: {stderr}\nCommand: {command}\nFull command: {' '.join(full_cmd)}")
 
     lines = stdout.splitlines()
     filtered_output = []
     capture = False
+
     for line in lines:
         if line.startswith("crash ") and "Copyright" in line:
             continue
@@ -85,15 +175,23 @@ def run_crash_command(command, vmcore_path, vmlinux_path):
         if capture:
             filtered_output.append(line)
 
-    return "\n".join(filtered_output).strip()
+    output = "\n".join(filtered_output).strip()
 
-# Analyze D state processes (changed to UN state) and their backtraces
-def analyze_d_state_processes(vmcore_path, vmlinux_path):
+    if debug:
+        log_progress(f"Filtered output for '{command}' (RHEL 9):\n{output}")
+
+    if not output:
+        log_progress(f"Warning: No valid output from command '{command}'")
+
+    return output
+
+# Analyze D state processes and their backtraces
+def analyze_d_state_processes(vmcore_path, vmlinux_path, run_crash_command):
     log_progress("Analyzing D state processes...")
     ps_output = run_crash_command("ps", vmcore_path, vmlinux_path)
     d_state_procs = []
     for line in ps_output.splitlines():
-        if " UN " in line:  # Detect UN state processes
+        if " UN " in line:
             pid = line.split()[0]
             proc_name = line.split()[-1]
             log_progress(f"Found D state process: PID {pid} ({proc_name}), analyzing backtrace...")
@@ -103,7 +201,7 @@ def analyze_d_state_processes(vmcore_path, vmlinux_path):
     return d_state_procs
 
 # Analyze hung tasks from kernel logs
-def analyze_hung_tasks(vmcore_path, vmlinux_path):
+def analyze_hung_tasks(vmcore_path, vmlinux_path, run_crash_command):
     log_progress("Analyzing hung tasks...")
     log_output = run_crash_command("log", vmcore_path, vmlinux_path)
     hung_tasks = []
@@ -155,12 +253,12 @@ def analyze_hung_tasks(vmcore_path, vmlinux_path):
     return hung_tasks
 
 # Analyze kernel logs for errors, warnings, and bug related events
-def analyze_kernel_logs(vmcore_path, vmlinux_path):
+def analyze_kernel_logs(vmcore_path, vmlinux_path, run_crash_command):
     log_progress("Analyzing kernel logs...")
     log_output = run_crash_command("log", vmcore_path, vmlinux_path)
     log_lines = log_output.splitlines()
 
-    # Define bug related keywords (updated per user request)
+    # Define bug related keywords
     bug_keywords = ["error", "failed", "warn", "warning", "oops", "bug", "leak", "invalid", "deadlock"]
 
     # Filter logs containing any of the bug related keywords (case-insensitive)
@@ -170,16 +268,37 @@ def analyze_kernel_logs(vmcore_path, vmlinux_path):
     return "\n".join(filtered_logs) if filtered_logs else "No errors, warnings, or bug related events found in kernel logs."
 
 # Analyze system performance metrics
-def analyze_performance(vmcore_path, vmlinux_path):
+def analyze_performance(vmcore_path, vmlinux_path, run_crash_command):
     log_progress("Analyzing system performance metrics...")
     sys_info = run_crash_command("sys", vmcore_path, vmlinux_path)
     mem_info = run_crash_command("kmem -i", vmcore_path, vmlinux_path)
     log_progress("Analyzing top memory consuming processes...")
     ps_output = run_crash_command("ps", vmcore_path, vmlinux_path)
     processes = []
+
+    if not ps_output:
+        log_progress("No process data available from 'ps' command.")
+        return {"sys_info": sys_info, "mem iterated_info": mem_info, "top_processes": processes}
+
     lines = ps_output.splitlines()
-    if len(lines) > 0:
-        header = lines[0].split()
+    if not lines:
+        log_progress("Empty process output.")
+        return {"sys_info": sys_info, "mem_info": mem_info, "top_processes": processes}
+
+    # Find header dynamically
+    header_line = None
+    for i, line in enumerate(lines):
+        if "PID" in line and "COMM" in line:
+            header_line = lines[i]
+            data_start = i + 1
+            break
+
+    if not header_line:
+        log_progress("Error: No valid header found in 'ps' output.")
+        return {"sys_info": sys_info, "mem_info": mem_info, "top_processes": processes}
+
+    header = header_line.split()
+    try:
         pid_idx = header.index("PID")
         ppid_idx = header.index("PPID")
         cpu_idx = header.index("CPU")
@@ -188,39 +307,44 @@ def analyze_performance(vmcore_path, vmlinux_path):
         vsz_idx = header.index("VSZ")
         rss_idx = header.index("RSS")
         comm_idx = header.index("COMM")
-        for line in lines[1:]:
-            if line.strip().startswith(">"):
+    except ValueError as e:
+        log_progress(f"Error: Invalid header format: {header}, missing column: {str(e)}")
+        return {"sys_info": sys_info, "mem_info": mem_info, "top_processes": processes}
+
+    for line in lines[data_start:]:
+        if line.strip().startswith(">"):
+            continue
+        parts = line.split()
+        if len(parts) >= comm_idx + 1:
+            try:
+                pid = parts[pid_idx]
+                ppid = parts[ppid_idx]
+                cpu = parts[cpu_idx]
+                state = parts[state_idx]
+                mem_percent = float(parts[mem_idx])
+                vsz = parts[vsz_idx]
+                rss = parts[rss_idx]
+                comm = " ".join(parts[comm_idx:])
+                processes.append({
+                    "pid": pid,
+                    "ppid": ppid,
+                    "cpu": cpu,
+                    "state": state,
+                    "mem_percent": mem_percent,
+                    "vsz": vsz,
+                    "rss": rss,
+                    "comm": comm
+                })
+            except (ValueError, IndexError) as e:
+                log_progress(f"Skipping malformed ps line '{line}': {e}")
                 continue
-            parts = line.split()
-            if len(parts) >= comm_idx + 1:
-                try:
-                    pid = parts[pid_idx]
-                    ppid = parts[ppid_idx]
-                    cpu = parts[cpu_idx]
-                    state = parts[state_idx]
-                    mem_percent = float(parts[mem_idx])
-                    vsz = parts[vsz_idx]
-                    rss = parts[rss_idx]
-                    comm = " ".join(parts[comm_idx:])
-                    processes.append({
-                        "pid": pid,
-                        "ppid": ppid,
-                        "cpu": cpu,
-                        "state": state,
-                        "mem_percent": mem_percent,
-                        "vsz": vsz,
-                        "rss": rss,
-                        "comm": comm
-                    })
-                except (ValueError, IndexError) as e:
-                    log_progress(f"Skipping malformed ps line '{line}': {e}")
-                    continue
+
     top_processes = sorted(processes, key=lambda x: x["mem_percent"], reverse=True)[:9]
     log_progress("System performance metrics analysis completed.")
     return {"sys_info": sys_info, "mem_info": mem_info, "top_processes": top_processes}
 
 # Analyze additional hung causes
-def analyze_hung_causes(vmcore_path, vmlinux_path):
+def analyze_hung_causes(vmcore_path, vmlinux_path, run_crash_command):
     log_progress("Analyzing potential hung causes...")
 
     # Check memory pressure
@@ -249,7 +373,6 @@ def analyze_hung_causes(vmcore_path, vmlinux_path):
             if "Kernel panic" in log_lines[i]:
                 log_progress(f"Found Kernel panic at line {i}")
                 panic_found = True
-                # Start collecting from this line to the end
                 while i < len(log_lines):
                     panic_trace_lines.append(log_lines[i].strip())
                     i += 1
@@ -257,14 +380,14 @@ def analyze_hung_causes(vmcore_path, vmlinux_path):
             i += 1
         if panic_found and panic_trace_lines:
             panic_trace = "\n".join(panic_trace_lines)
-            log_progress("Successfully extracted panic trace from Kernel panic to end")
+            log_progress("Successfully extracted panic trace from Kernel panic to end.")
         else:
             log_progress("No Kernel panic trace found in log")
 
     # Check I/O subsystem issues
     log_progress("Checking I/O subsystem issues...")
     io_errors = [line for line in log_output.splitlines() if "I/O" in line or "blk" in line or "scsi" in line]
-    io_issues = "\n".join(io_errors) if io_errors else "No I/O-related errors detected."
+    io_issues = "\n".join(io_errors) if io_errors else "No I/O related errors detected."
 
     # Check interrupt statistics
     log_progress("Checking interrupt statistics...")
@@ -287,7 +410,7 @@ def analyze_hung_causes(vmcore_path, vmlinux_path):
         "panic_trace": panic_trace,
         "io_issues": io_issues,
         "irq": irq_summary,
-        "net_devices": net_devices 
+        "net_devices": net_devices
     }
 
 # Analyze backtraces and call traces to generate conclusions
@@ -309,7 +432,6 @@ def analyze_traces(d_state_procs, hung_tasks, hung_causes):
         if "blk_" in backtrace or "scsi_" in backtrace or "wait_for_completion" in backtrace:
             conclusion = f"Process {proc['name']} (PID: {proc['pid']}) may be involved in heavy IO operations, potentially blocking on disk or device access."
             conclusions.append(conclusion)
-        # Check for network-related operations
         if "netif_" in backtrace or "tcp_" in backtrace or "sock_" in backtrace:
             conclusion = f"Process {proc['name']} (PID: {proc['pid']}) may be blocked on network operations. Check network stack or driver issues."
             conclusions.append(conclusion)
@@ -330,7 +452,6 @@ def analyze_traces(d_state_procs, hung_tasks, hung_causes):
         if "blk_" in backtrace or "scsi_" in backtrace or "wait_for_completion" in backtrace:
             conclusion = f"Hung task {task['name']} (PID: {task['pid']}) blocked for {blocked_time} may be involved in heavy IO operations, potentially blocking on disk or device access."
             conclusions.append(conclusion)
-        # Check for network-related operations
         if "netif_" in backtrace or "tcp_" in backtrace or "sock_" in backtrace:
             conclusion = f"Hung task {task['name']} (PID: {task['pid']}) blocked for {blocked_time} may be related to network operations. Investigate network stack or driver."
             conclusions.append(conclusion)
@@ -347,7 +468,6 @@ def analyze_traces(d_state_procs, hung_tasks, hung_causes):
         elif "schedule" in panic_trace and "timeout" in panic_trace:
             conclusion = "Kernel panic may be related to a scheduling timeout. Investigate processes or drivers causing delays."
             conclusions.append(conclusion)
-        # Check for network-related issues in panic trace
         if "netif_" in panic_trace or "tcp_" in panic_trace or "sock_" in panic_trace:
             conclusion = "Kernel panic may be related to network operations. Investigate network stack or driver issues."
             conclusions.append(conclusion)
@@ -519,23 +639,32 @@ def main():
         sys.exit(1)
 
     try:
+        # Detect RHEL version and select appropriate crash command function
+        rhel_version = get_rhel_version()
+        if rhel_version == "8":
+            run_crash_command = run_crash_command_rhel8
+            log_progress("Detected RHEL 8, using RHEL 8 specific settings.")
+        else:  # rhel_version == "9"
+            run_crash_command = run_crash_command_rhel9
+            log_progress("Detected RHEL 9, using RHEL 9 specific settings.")
+
         # Check and setup crash environment
         setup_crash_environment()
 
         # Analyze D state processes and backtraces
-        d_state_procs = analyze_d_state_processes(vmcore_path, vmlinux_path)
+        d_state_procs = analyze_d_state_processes(vmcore_path, vmlinux_path, run_crash_command)
 
         # Analyze hung tasks
-        hung_tasks = analyze_hung_tasks(vmcore_path, vmlinux_path)
+        hung_tasks = analyze_hung_tasks(vmcore_path, vmlinux_path, run_crash_command)
 
         # Analyze additional hung causes
-        hung_causes = analyze_hung_causes(vmcore_path, vmlinux_path)
+        hung_causes = analyze_hung_causes(vmcore_path, vmlinux_path, run_crash_command)
 
         # Analyze kernel logs
-        kernel_logs = analyze_kernel_logs(vmcore_path, vmlinux_path)
+        kernel_logs = analyze_kernel_logs(vmcore_path, vmlinux_path, run_crash_command)
 
         # Analyze performance data
-        perf_data = analyze_performance(vmcore_path, vmlinux_path)
+        perf_data = analyze_performance(vmcore_path, vmlinux_path, run_crash_command)
 
         # Generate report with analysis conclusions
         generate_html_report(d_state_procs, hung_tasks, perf_data, kernel_logs, hung_causes, output_file)
