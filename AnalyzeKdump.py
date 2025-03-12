@@ -87,7 +87,7 @@ def get_rhel_version():
         log_progress(f"Error detecting RHEL version: {e}")
         raise Exception("System version detection failed. Ensure running on RHEL 8 or 9.")
 
-# RHEL 8-specific crash command execution and filtering
+# RHEL 8 specific crash command execution and filtering
 def run_crash_command_rhel8(command, vmcore_path, vmlinux_path, debug=False):
     """
     Execute a crash command on RHEL 8 and return its filtered output.
@@ -140,7 +140,7 @@ def run_crash_command_rhel8(command, vmcore_path, vmlinux_path, debug=False):
 
     return output
 
-# RHEL 9-specific crash command execution and filtering
+# RHEL 9 specific crash command execution and filtering
 def run_crash_command_rhel9(command, vmcore_path, vmlinux_path, debug=False):
     """
     Execute a crash command on RHEL 9 and return its filtered output.
@@ -427,7 +427,7 @@ def analyze_traces(d_state_procs, hung_tasks, hung_causes):
             conclusion = f"Process {proc['name']} (PID: {proc['pid']}) encountered a kernel oops or bug. Investigate kernel logs for specific errors."
             conclusions.append(conclusion)
         elif "schedule" not in backtrace and "sleep" not in backtrace:
-            conclusion = f"Process {proc['name']} (PID: {proc['pid']}) may be CPU-intensive, as it lacks scheduling or sleep calls in its backtrace. Verify if it contributes to high CPU usage."
+            conclusion = f"Process {proc['name']} (PID: {proc['pid']}) may be CPU intensive, as it lacks scheduling or sleep calls in its backtrace. Verify if it contributes to high CPU usage."
             conclusions.append(conclusion)
         if "blk_" in backtrace or "scsi_" in backtrace or "wait_for_completion" in backtrace:
             conclusion = f"Process {proc['name']} (PID: {proc['pid']}) may be involved in heavy IO operations, potentially blocking on disk or device access."
@@ -611,7 +611,7 @@ def generate_html_report(d_state_procs, hung_tasks, perf_data, kernel_logs, hung
 
 # Main function with argument parsing and progress logging
 def main():
-    log_progress("Starting kdump analysis script...")
+    log_progress("Initiating AnalyzeKdump for kdump analysis...")
     if len(sys.argv) < 5:
         print_usage()
         sys.exit(1)
@@ -643,10 +643,10 @@ def main():
         rhel_version = get_rhel_version()
         if rhel_version == "8":
             run_crash_command = run_crash_command_rhel8
-            log_progress("Detected RHEL 8, using RHEL 8 specific settings.")
+            log_progress("RHEL 8 detected, applying RHEL 8 specific settings.")
         else:  # rhel_version == "9"
             run_crash_command = run_crash_command_rhel9
-            log_progress("Detected RHEL 9, using RHEL 9 specific settings.")
+            log_progress("RHEL 9 detected, applying RHEL 9 specific settings.")
 
         # Check and setup crash environment
         setup_crash_environment()
