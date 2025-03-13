@@ -30,7 +30,7 @@ This tool is particularly useful for system administrators and support engineers
 ![image](https://github.com/user-attachments/assets/7a5e3398-1fa9-41d0-bd9a-e170e397b1e5)
 
 ## Example
-`# ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-02-26-06\:39\:15/vmcore --vmlinux /usr/lib/debug/lib/modules/5.14.0-503.26.1.el9_5.x86_64/vmlinux`
+`# ./AnalyzeKdump.py --vmcore /var/crash/127.0.0.1-2025-03-13-14\:50\:01/vmcore --vmlinux /usr/lib/debug/lib/modules/5.14.0-503.26.1.el9_5.x86_64/vmlinux`
 
 ![image](https://github.com/user-attachments/assets/f53e38e4-a424-4d0a-ab86-d3e97edb5d7c)
 
