@@ -43,10 +43,15 @@ Support Contact:        Frank Zhu <frz@microsoft.com>   Microsoft Azure Linux Es
     """
     print(usage)
 
-# Print progress with timestamp
-def log_progress(message):
+# Print progress with timestamp and optional color
+def log_progress(message, color=None):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print(f"[{timestamp}] {message}")
+    if color == "red":
+        print(f"\033[31m[{timestamp}] {message}\033[0m")
+    elif color == "green":
+        print(f"\033[32m[{timestamp}] {message}\033[0m")
+    else:
+        print(f"[{timestamp}] {message}")
 
 # Check and install crash environment if not present
 def setup_crash_environment():
@@ -278,7 +283,7 @@ def analyze_performance(vmcore_path, vmlinux_path, run_crash_command):
 
     if not ps_output:
         log_progress("No process data available from 'ps' command.")
-        return {"sys_info": sys_info, "mem iterated_info": mem_info, "top_processes": processes}
+        return {"sys_info": sys_info, "mem_info": mem_info, "top_processes": processes}
 
     lines = ps_output.splitlines()
     if not lines:
@@ -611,7 +616,7 @@ def generate_html_report(d_state_procs, hung_tasks, perf_data, kernel_logs, hung
 
 # Main function with argument parsing and progress logging
 def main():
-    log_progress("Initiating AnalyzeKdump for kdump analysis...")
+    log_progress("Initiating AnalyzeKdump for kdump analysis...", color="red")
     if len(sys.argv) < 5:
         print_usage()
         sys.exit(1)
@@ -668,7 +673,8 @@ def main():
 
         # Generate report with analysis conclusions
         generate_html_report(d_state_procs, hung_tasks, perf_data, kernel_logs, hung_causes, output_file)
-        log_progress(f"Analysis completed. Report saved to {output_file}")
+
+        log_progress(f"Analysis completed. Report saved to {output_file}", color="green")
     except Exception as e:
         log_progress(f"Error occurred: {e}")
         sys.exit(1)
