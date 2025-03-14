@@ -152,7 +152,7 @@ def run_crash_command_rhel9(command, vmcore_path, vmlinux_path, debug=False):
     Designed for crash 8.0.5 with 'crash>' prompt.
     """
     full_cmd = ["crash", vmlinux_path, vmcore_path]
-    process = subprocess.Popen(full_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True, bufsize=1024*1024)
+    process = subprocess.Popen(full_cmd, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, bufsize=1024*1024)
     stdout, stderr = process.communicate(input=f"{command}\nquit\n")
 
     if debug:
