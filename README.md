@@ -64,6 +64,6 @@ The script requires root privileges to install dependencies and access vmcore fi
 
 For issues or questions, contact:
 
-Frank Zhu [frz@microsoft.com](mailto:frz@microsoft.com)
+Frank Zhu [frz@microsoft.com](mailto:frz@microsoft.com) or [flankeroot@gmail.com](mailto:flankeroot@gmail.com)  
 
 Microsoft Azure Linux Escalation Team
